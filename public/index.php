@@ -9,3 +9,4 @@ use App\Core\Http\Request;
 $request = $container->resolve(Request::class);
 
 $router->dispatch($request, $container);
+

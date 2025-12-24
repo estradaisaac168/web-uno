@@ -13,13 +13,15 @@ class Request
     {
         $this->method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
-        $this->uri = parse_url(
-            $_SERVER['REQUEST_URI'] ?? '/',
-            PHP_URL_PATH
-        );
+        $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+        $this->uri = rtrim($uri, '/') ?: '/';
 
         $this->query = $_GET;
-        $this->body  = $_POST;
+
+        $input = file_get_contents('php://input');
+        $json  = json_decode($input, true);
+
+        $this->body = is_array($json) ? $json : $_POST;
     }
 
     public function method(): string
@@ -35,5 +37,10 @@ class Request
     public function input(string $key, $default = null)
     {
         return $this->body[$key] ?? $this->query[$key] ?? $default;
+    }
+
+    public function all(): array
+    {
+        return array_merge($this->query, $this->body);
     }
 }

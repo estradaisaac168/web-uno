@@ -51,13 +51,21 @@ class Router{
                 continue;
             }
 
-            if(!preg_match($route->pattern, $request->uri(), $matches)){
-                continue;
+            if(!preg_match($route->pattern, $request->uri(), $matches)){ //compare and save result into $matches
+                continue; 
             }
 
+
+            /**
+             * Esta funcion filtra $matches y se queda solo con las claves que son strings, descartando las demas claves
+             * 
+             * array: //Aca $matches ya trae data en forma de array
+             * callback: //Recibe la clave y no el valor en donde $k es la clave del array
+             * mode: ARRAY_FILTER_USE_KEY, literalmente la clave
+             */
             $params = array_filter(
-                $matches,
-                fn($k) => is_string($k),
+                $matches, 
+                fn($k) => is_string($k), 
                 ARRAY_FILTER_USE_KEY
             );
 
@@ -69,11 +77,23 @@ class Router{
             [$controller, $method] = $route->action; //destructuring = $var1 = Controller, $var2 = method
             $instance = $container->resolve($controller);
 
-            call_user_func_array([$instance, $method], $params);
+            if(!method_exists($instance, $method)){
+                throw new \Exception("Method {$method} no found");
+            }
+                
+
+            /**
+             * //Esta funcion llama dinamicamente a un metodo de un objeto, pasando como parametros un array.
+             *
+             * [$instance, $method] => $instance->$method(...);
+             */
+            call_user_func_array([$instance, $method], $params); 
             return;
+            // $instance->method(array_values(...$params));
         }
 
-        echo "404";
+        throw new \Exception("Route No found", 404);
+        
     }
 
 }
